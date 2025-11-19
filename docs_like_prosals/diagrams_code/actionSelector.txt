@@ -1,0 +1,43 @@
+flowchart LR
+  %% Inputs
+  IN1[From 1.0 NLU:\nIntents, Tone, Sentiment, Flags]
+  IN2[From 2.0 Context:\nGrounding Facts, Context Features]
+  D1[(D1: NPC Profiles\nPersona & Genetic Traits)]
+  D2[(D2: NPC–Player State\nGrowth Traits / Memory)]
+  D3[(D3: Lore & World Facts)]
+  D4[(D4: Logs & Metrics)]
+
+  %% 3.x Generation
+  G31[3.1 Affordance Generation]
+  G32[3.2 Template Filler]
+  G33["3.3 Local Draft Generator (TinyLlama)"]
+  G34[3.4 Assemble Candidate Set]
+
+  %% 4.x Selection
+  S41[4.1 Feature Engineering]
+  S42[4.2 Re-Rank / Score Candidates]
+  S43[4.3 ε-Greedy Selection]
+
+  %% Flows
+  IN1 --> G31
+  IN2 --> G31
+  D1 --> G31
+  D2 --> G31
+
+  G31 -->|"Action Options + Params"| G32
+  G31 -->|"Action Options + Params"| G33
+  IN2 --> G32
+  D1 --> G32
+  D2 --> G32
+  IN2 --> G33
+  D1 --> G33
+  D2 --> G33
+
+  G32 -->|"Templated Lines"| G34
+  G33 -->|"Draft Lines"| G34
+  G34 -->|"Candidate (Action, Line) Set"| S41
+
+  S41 --> S42
+  D4 -->|"Historical Features\n(optional)"| S41
+  S42 --> S43
+  S43 -->|"Chosen (Action, Line) + Score"| OUT[(To 5.0 Safety & Post-Processing)]

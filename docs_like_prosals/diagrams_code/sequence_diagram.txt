@@ -1,0 +1,43 @@
+sequenceDiagram
+  actor Player
+  participant Client as Unity Client
+  participant Backend as ASP.NET /interact
+  participant NLU as NLU Classifier (ML)
+  participant Ctx as Context & RAG
+  participant Policy as Action Selector (ML)
+  participant Gen as Line Generator / Templates
+  participant Safe as Safety & Post-Processing
+  participant LLM as Cloud LLM (optional)
+
+  Player->>Client: Log in / Start session
+  Client->>Backend: Scene enter event (location=blacksmith_shop, time=day)
+
+  alt Player drops an item
+    Client->>Backend: ActionEvent=DROP_ITEM_ON_COUNTER
+  else No item action
+    Client->>Backend: ActionEvent=NONE
+  end
+
+  Player->>Client: Type text input
+  Client->>Backend: POST /interact {text, npc_id, actionEvent, timeOfDay}
+
+  Backend->>NLU: classify(text, context)
+  NLU-->>Backend: intents, tone, sentiment, flags
+
+  Backend->>Ctx: build query + retrieve facts
+  Ctx-->>Backend: grounding facts (policy, prices, lore)
+
+  Backend->>Policy: rank candidate (action, line) pairs
+  Policy-->>Backend: best action (+ scores)
+
+  Backend->>Gen: generate 1–3 short lines (or fill templates)
+  Gen-->>Backend: candidate lines
+
+  Backend->>Safe: validate facts/safety + pick final
+  opt Optional polish
+    Safe->>LLM: rewrite with constraints (≤40 tokens, no new facts)
+    LLM-->>Safe: polished line
+  end
+
+  Safe-->>Client: {action, final_line, ui_cues}
+  Client-->>Player: NPC performs action and/or speaks line

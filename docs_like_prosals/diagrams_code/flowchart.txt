@@ -1,0 +1,25 @@
+flowchart TB
+  %% Actor
+  P("[👤 Player]")
+  %% Parent use case
+  UC0("(Initiate NPC Interaction)")
+  UC1("Interpret Player Input (NLU)")
+  UC2("Build Context & Retrieve Facts (RAG)")
+  UC3([ Generate Candidate Responses])
+  UC4([ Score & Select Best Response])
+  UC5([ Safety & Post-Processing])
+  UC6([ Update Traits & Persist])
+  UC7([ Log Interaction])
+
+  %% Optional extend
+  L([☁️ LLM Provider])
+  UCP([ Polish Dialogue Line]):::optional
+
+  %% Wiring
+  P --> UC0
+  UC0 --> UC1 --> UC2 --> UC3 --> UC4 --> UC5 --> UC6 --> UC7
+
+  L --- UCP
+  UC5 --- UCP
+
+  classDef optional fill:#eef,stroke:#88a,color:#223;
